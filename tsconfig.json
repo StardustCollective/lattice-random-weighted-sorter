@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "outDir": ".build",
+    "target": "ES2022",
+    "allowJs": false,
+    "resolveJsonModule": false,
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "noEmit": false,
+    "isolatedModules": false,
+    "allowImportingTsExtensions": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@/*": ["./*"]
+    }
+  }
+}

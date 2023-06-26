@@ -1,1 +1,1 @@
-# lattice-random-weighted-sorter
+# Lattice Random Weighted Sorter
