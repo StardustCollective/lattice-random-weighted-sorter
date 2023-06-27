@@ -1,6 +1,10 @@
 import crypto from 'crypto';
 
+import DebugFn from 'debug';
+
 import { SEED_SIZE_IN_BITS } from '@/consts/seed.js';
+
+const debug = DebugFn('lattice:number-generator');
 
 const assertValidSeed = (encodedSeed: string) => {
   // Check if the string starts with '0x'
@@ -52,6 +56,7 @@ class SeededRandomNumberGenerator {
     hasher.update(Buffer.from((this._seed ^ this._state).toString(16), 'hex'));
     const result = '0x' + hasher.digest('hex');
     assertValidSeed(result);
+    debug(`Next State Prospect: ${result}`);
     return BigInt(result);
   }
 

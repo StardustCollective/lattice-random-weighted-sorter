@@ -1,5 +1,9 @@
+import DebugFn from 'debug';
+
 import { SeededRandomNumberGenerator } from './random_numbers.js';
 import { IItem } from './items.js';
+
+const debug = DebugFn('lattice:weighted-sorter');
 
 class SeededRandomWeightedSorter {
   private _generator: SeededRandomNumberGenerator;
@@ -9,10 +13,15 @@ class SeededRandomWeightedSorter {
   private _participantsAssigned = new Set<string>();
 
   constructor(seedEncoded: string, state: number, participants: IItem[]) {
+    if (!participants.every((item) => item.weight > 0)) {
+      throw new Error(
+        'SeededRandomWeightedSorter: All participants must have non-zero weights'
+      );
+    }
     this._generator = new SeededRandomNumberGenerator(seedEncoded, state);
-    this._participants = [...participants]
-      .filter((item) => item.weight > 0)
-      .sort((itemA, itemB) => String(itemA.id).localeCompare(String(itemB.id)));
+    this._participants = [...participants].sort((itemA, itemB) =>
+      String(itemA.id).localeCompare(String(itemB.id))
+    );
     this._participantsWeight = this._participants.reduce(
       (sum, participant) => sum + participant.weight,
       0
@@ -35,10 +44,14 @@ class SeededRandomWeightedSorter {
     return this._participantsWeight;
   }
 
+  get positions() {
+    return new Map(this._participantsPositions);
+  }
+
   assignNextPosition() {
     const nextPosition = this._participantsAssigned.size;
 
-    console.log(`Assigning position ${nextPosition}`);
+    debug(`Assigning position ${nextPosition}`);
 
     while (nextPosition === this._participantsAssigned.size) {
       const nextPositionWinner = this._generator.generateRandomIntInRange(
@@ -54,7 +67,7 @@ class SeededRandomWeightedSorter {
         }
 
         if (this._participantsAssigned.has(participant.id)) {
-          console.log(
+          debug(
             `Participant ${participant.id.slice(
               0,
               20
@@ -67,17 +80,19 @@ class SeededRandomWeightedSorter {
           `Assigning participant ${participant.id.slice(
             0,
             20
-          )} => pos#${nextPosition}`
+          )} => pos#${nextPosition} => weight#${participant.weight} `
         );
 
         this._participantsPositions.set(nextPosition, participant);
         this._participantsAssigned.add(participant.id);
+
+        break;
       }
     }
   }
 
   assignAllPositions() {
-    while (this._participantsAssigned.size > this._participants.length) {
+    while (this._participantsAssigned.size < this._participants.length) {
       this.assignNextPosition();
     }
   }
