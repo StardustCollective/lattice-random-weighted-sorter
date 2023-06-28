@@ -9,8 +9,10 @@ class SeededRandomWeightedSorter {
   private _generator: SeededRandomNumberGenerator;
   private _participants: IItem[];
   private _participantsWeight: number;
+  private _participantsTickets = new Map<number, IItem>();
   private _participantsPositions = new Map<number, IItem>();
   private _participantsAssigned = new Set<string>();
+  private _winningNumbers: number[] = [];
 
   constructor(seedEncoded: string, state: number, participants: IItem[]) {
     if (!participants.every((item) => item.weight > 0)) {
@@ -48,6 +50,36 @@ class SeededRandomWeightedSorter {
     return new Map(this._participantsPositions);
   }
 
+  get winningNumbers() {
+    return this._winningNumbers.map((number, index) => ({ index, number }));
+  }
+
+  assignTickets() {
+    let lastTicketNumber = 0;
+    for (const participant of this._participants) {
+      for (
+        let offsetTicket = 0;
+        offsetTicket < participant.weight;
+        offsetTicket++
+      ) {
+        const nextTicketNumber = lastTicketNumber + offsetTicket;
+        this._participantsTickets.set(nextTicketNumber, participant);
+        participant.tickets.push(nextTicketNumber);
+      }
+      lastTicketNumber += participant.weight;
+    }
+
+    // Tickets Check
+
+    const ticketsSet = new Set(this._participantsTickets.keys());
+
+    if (ticketsSet.size !== this._participantsWeight) {
+      throw new Error(
+        `Inconsistency Error: Ticket generation check fail (${ticketsSet.size}, ${this._participantsWeight})`
+      );
+    }
+  }
+
   assignNextPosition() {
     const nextPosition = this._participantsAssigned.size;
 
@@ -57,37 +89,42 @@ class SeededRandomWeightedSorter {
       const nextPositionWinner = this._generator.generateRandomIntInRange(
         this._participantsWeight
       );
-      let currentAccumulatedWeight = 0;
 
-      for (const participant of this._participants) {
-        currentAccumulatedWeight += participant.weight;
+      this._winningNumbers.push(nextPositionWinner);
 
-        if (nextPositionWinner > currentAccumulatedWeight) {
-          continue;
-        }
+      const nextPositionWinnerParticipant =
+        this._participantsTickets.get(nextPositionWinner);
 
-        if (this._participantsAssigned.has(participant.id)) {
-          debug(
-            `Participant ${participant.id.slice(
-              0,
-              20
-            )} already has a position, skipping round`
-          );
-          break;
-        }
+      if (!nextPositionWinnerParticipant) {
+        throw new Error(
+          `Inconsistency Error: Winner participant not found by ticket No. ${nextPositionWinner}`
+        );
+      }
 
-        console.log(
-          `Assigning participant ${participant.id.slice(
+      if (this._participantsAssigned.has(nextPositionWinnerParticipant.id)) {
+        debug(
+          `Participant ${nextPositionWinnerParticipant.id.slice(
             0,
             20
-          )} => pos#${nextPosition} => weight#${participant.weight} `
+          )} already has a position, skipping round`
         );
-
-        this._participantsPositions.set(nextPosition, participant);
-        this._participantsAssigned.add(participant.id);
-
-        break;
+        continue;
       }
+
+      console.log(
+        `Assigning participant ${nextPositionWinnerParticipant.id.slice(
+          0,
+          20
+        )} => pos#${nextPosition} => weight#${
+          nextPositionWinnerParticipant.weight
+        } `
+      );
+
+      this._participantsPositions.set(
+        nextPosition,
+        nextPositionWinnerParticipant
+      );
+      this._participantsAssigned.add(nextPositionWinnerParticipant.id);
     }
   }
 
@@ -95,6 +132,8 @@ class SeededRandomWeightedSorter {
     while (this._participantsAssigned.size < this._participants.length) {
       this.assignNextPosition();
     }
+    console.log(`Total weight: ${this.participantsWeight}`);
+    console.log(`Total winning numbers: ${this._winningNumbers.length}`);
   }
 }
 

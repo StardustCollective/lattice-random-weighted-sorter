@@ -7,16 +7,16 @@
  * -p, --project <project-slug>  Project Slug
  * -h, --help                    display help for command
  */
-import fs from 'fs';
+import path from 'path';
 
 import { Command } from 'commander';
 import boxen from 'boxen';
 
 import {
-  SeededRandomSorter,
   SeededRandomWeightedSorter,
   readAndParseItemsFile
 } from '@/lib/index.js';
+import { exportData } from '@/utils/export_data.js';
 
 const executeWeightedRandomSelection = async (options: {
   dryRun: boolean;
@@ -25,6 +25,7 @@ const executeWeightedRandomSelection = async (options: {
   idKey: string;
   weightKey: string;
   positionKey: string;
+  ticketsKey: string;
 }): Promise<void> => {
   console.log(
     boxen(
@@ -43,21 +44,18 @@ const executeWeightedRandomSelection = async (options: {
     weightk: options.weightKey
   });
 
+  if (items.some((item) => item.weight === 0)) {
+    throw new Error('Script only supports non-zero weight participants');
+  }
+
   console.log('Assigning non-zero weight participants');
   const randomWeightedSorter = new SeededRandomWeightedSorter(
     options.seed,
     0,
-    items.filter((item) => item.weight > 0)
+    items
   );
+  randomWeightedSorter.assignTickets();
   randomWeightedSorter.assignAllPositions();
-
-  console.log('Assigning zero weight participants');
-  const randomSorter = new SeededRandomSorter(
-    options.seed,
-    0,
-    items.filter((item) => item.weight === 0)
-  );
-  randomSorter.assignAllPositions();
 
   if (options.dryRun) {
     console.log('DryRun: Skipping saving results');
@@ -69,18 +67,26 @@ const executeWeightedRandomSelection = async (options: {
   const data: Record<string, any>[] = [];
 
   for (const [position, item] of randomWeightedSorter.positions) {
-    data.push(Object.assign(item.source, { [options.positionKey]: position }));
-  }
-
-  for (const [position, item] of randomSorter.positions) {
     data.push(
       Object.assign(item.source, {
-        [options.positionKey]: randomWeightedSorter.positions.size + position
+        [options.positionKey]: position,
+        [options.ticketsKey]: item.tickets
       })
     );
   }
 
-  await fs.promises.writeFile(options.itemsFile, JSON.stringify(data, null, 2));
+  const itemsBaseFilename = path.join(
+    path.dirname(options.itemsFile),
+    path.basename(options.itemsFile, '.json')
+  );
+
+  await exportData(data, itemsBaseFilename + '.processed', ['json']);
+
+  await exportData(
+    randomWeightedSorter.winningNumbers,
+    itemsBaseFilename + '.winning-numbers',
+    ['json', 'csv']
+  );
 };
 
 const program = new Command();
@@ -98,6 +104,10 @@ program.requiredOption(
 program.requiredOption(
   '-posk, --position-key <position-key>',
   'Items file => position key to write'
+);
+program.requiredOption(
+  '-ticketsk, --tickets-key <tickets-key>',
+  'Items file => tickets key to write'
 );
 program.action(executeWeightedRandomSelection);
 
