@@ -5,6 +5,7 @@ type IItem = {
   weight: number;
   source: any;
   tickets: number[];
+  winningNumber: number | null;
 };
 
 const isItem = (value: any): value is IItem =>
@@ -27,7 +28,8 @@ const readAndParseItemsJSON = (
         id: entry[keys.idk],
         weight: entry[keys.weightk],
         source: entry,
-        tickets: []
+        tickets: [],
+        winningNumber: null
       };
 
       if (!isItem(item)) {

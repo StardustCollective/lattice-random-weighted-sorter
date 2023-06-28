@@ -125,6 +125,7 @@ class SeededRandomWeightedSorter {
         nextPositionWinnerParticipant
       );
       this._participantsAssigned.add(nextPositionWinnerParticipant.id);
+      nextPositionWinnerParticipant.winningNumber = nextPositionWinner;
     }
   }
 

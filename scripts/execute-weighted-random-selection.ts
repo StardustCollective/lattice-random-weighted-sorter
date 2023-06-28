@@ -87,6 +87,17 @@ const executeWeightedRandomSelection = async (options: {
     itemsBaseFilename + '.winning-numbers',
     ['json', 'csv']
   );
+
+  await exportData(
+    [...randomWeightedSorter.positions.entries()].map(([position, item]) => ({
+      participantId: item.id,
+      position,
+      participantWeight: item.weight,
+      participantWinningNumber: item.winningNumber
+    })),
+    itemsBaseFilename + '.winning-numbers.participants',
+    ['json', 'csv']
+  );
 };
 
 const program = new Command();
