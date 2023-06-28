@@ -1,0 +1,34 @@
+{
+  "name": "lattice-random-weighted-sorter",
+  "version": "1.0.0",
+  "description": "Scripts to generate a random sorted selection based on participant weights.",
+  "author": "Stardust Collective<info@stardustcollective.org>",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "script": "tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@types/node": "^16.17.0",
+    "boxen": "^7.1.0",
+    "commander": "^11.0.0",
+    "csv": "^6.3.1"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.8",
+    "@typescript-eslint/eslint-plugin": "^5.60.0",
+    "@typescript-eslint/parser": "^5.60.0",
+    "debug": "^4.3.4",
+    "eslint": "^8.43.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-unused-imports": "^2.0.0",
+    "prettier": "^2.8.8",
+    "ts-essentials": "^9.3.2",
+    "tsx": "^3.12.7",
+    "typescript": "^5.1.3"
+  }
+}
